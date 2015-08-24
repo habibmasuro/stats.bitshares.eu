@@ -1,0 +1,59 @@
+<html>
+<head>
+<title>Websockets</title>                                                                                                                                                                                                                      
+<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css">
+<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/responsive/1.0.6/css/dataTables.responsive.css">
+<link rel="stylesheet" type="text/css" href="main.css">
+<style>
+pre {
+  background: #23241f;
+}
+</style>
+</head>
+<body>
+<h3 class="text-center">Graphene Websockets - TPS</h3>
+
+<div class="container-fluid">
+ <div class="row">
+  <div id="tps"     class="col-md-3"></div>
+  <div id="tpbhist"     class="col-md-9"></div>
+ </div>
+ <div class="row">
+  <div class="col-md-6">
+   <pre><code class="json" id="blockJson"></code></pre>
+  </div>
+  <div class="col-md-6">
+   <table data-order='[[ 0, "desc" ]]' id="txlist" class="display compact hover slider" width="100%">
+    <thead>
+        <tr>
+            <th>ocknr</th>
+            <th>from</th>
+            <th>to</th>
+            <th>amount</th>
+        </tr>
+    </thead>
+   </table>
+  </div>
+ </div>
+</div>
+<script type="text/javascript" language="javascript" src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" language="javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/highlight.min.js"></script>
+<script type="text/javascript" language="javascript" src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
+<script type="text/javascript" language="javascript" src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" language="javascript" src="//cdn.datatables.net/responsive/1.0.6/js/dataTables.responsive.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script type="text/javascript" language="javascript" src="graphene-custom.js"></script>
+<script type="text/javascript" language="javascript" src="graphene-api.js"></script>
+<script type="text/javascript" language="javascript" src="graphene-highcharts.js"></script>
+<script type="text/javascript" language="javascript">
+ $('#txlist').DataTable({
+    paging: false,
+    scrollY: 400,
+    searching: false,
+    responsive: true,
+    stateSave: true,
+ });
+</script>
+</body>
+</html>
