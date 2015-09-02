@@ -102,7 +102,7 @@ $(function () {
 		text: 'Num. Transactions',
 	    },
 	    min : 0,
-            max : 10,
+            max : 50,
 	},
 	tooltip: {
 	    headerFormat: '<b>{series.name}</b><br/>',

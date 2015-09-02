@@ -5,11 +5,6 @@
 <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css">
 <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/responsive/1.0.6/css/dataTables.responsive.css">
 <link rel="stylesheet" type="text/css" href="main.css">
-<style>
-pre {
-  background: #23241f;
-}
-</style>
 </head>
 <body>
 <h3 class="text-center">Graphene Websockets - TPS</h3>
@@ -24,13 +19,13 @@ pre {
    <pre><code class="json" id="blockJson"></code></pre>
   </div>
   <div class="col-md-6">
-   <table data-order='[[ 0, "desc" ]]' id="txlist" class="display compact hover slider" width="100%">
+   <table id="txlist" class="display compact hover slider" width="100%">
     <thead>
         <tr>
-            <th>ocknr</th>
+            <th></th>
+            <th>Blocknr</th>
             <th>from</th>
             <th>to</th>
-            <th>amount</th>
         </tr>
     </thead>
    </table>
@@ -48,13 +43,44 @@ pre {
 <script type="text/javascript" language="javascript" src="graphene-api.js"></script>
 <script type="text/javascript" language="javascript" src="graphene-highcharts.js"></script>
 <script type="text/javascript" language="javascript">
- $('#txlist').DataTable({
-    paging: false,
-    scrollY: 400,
-    searching: false,
-    responsive: true,
-    stateSave: true,
+ var table = $('#txlist').DataTable({
+    "paging"     : false,
+    "columns"    : [
+     {
+        "className":      'details-control',
+        "orderable":      false,
+        "data":           null,
+        "defaultContent": ''
+     },
+     {"data":"blocknr"},
+     {"data":"from"},
+     {"data":"to"},
+    ],
+    "order"      : [[ 2, "desc" ]],
+    "scrollY"    : 400,
+    "searching"  : false,
+    "responsive" : true,
+    "stateSave"  : true,
  });
+
+ // Add event listener for opening and closing details
+ $('#txlist tbody').on('click', 'td.details-control', function () {
+     var tr = $(this).closest('tr');
+     var row = table.row( tr );
+     if ( row.child.isShown() ) {
+         // This row is already open - close it
+         row.child.hide();
+         tr.removeClass('shown');
+     } else {
+         // Open this row
+         row.child( format(row.data()) ).show();
+         tr.addClass('shown');
+     }
+ } );
+ /* Formatting function for row details - modify as you need */
+ function format ( d ) {
+     return '<pre>'+JSON.stringify(d.tx,null,' ')+'</pre>';
+ }
 </script>
 </body>
 </html>

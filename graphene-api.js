@@ -20,21 +20,24 @@ function ws_exec(request,callback) {
 }
 
 function subscribe_blocks(callback) {
-  subscribe = [api_ids["database"], "subscribe_to_objects",[subscription_id,["2.1.0"]]];
-  ws_exec(subscribe);
-  subscriptions[subscription_id] = getBlock;
+  ws_exec([api_ids["database"], "set_subscribe_callback",[subscription_id, true]]);
+  ws_exec([api_ids["database"], "get_objects",[["2.1.0"]]]);
+  subscriptions[subscription_id] = onNotice;
   subscription_id++;
 }
 
-$(document).ready(function() {
+//$(document).ready(function() {
+$(window).on('load', function() {
  connection = new WebSocket(host);
  // When the connection is open, send some data to the server
  connection.onopen = function (e) {
-   console.log('WebSocket open');
+   //console.log('WebSocket open');
    ws_exec([1,"login",["bytemaster","supersecret"]]);
+   /*
    ws_exec([1,"network_node",[]], function(res){
              api_ids["network_node"] = res.result;
           });
+   */
    ws_exec([1,"network_broadcast",[]], function(res){
              api_ids["network_broadcast"] = res.result;
           });
@@ -64,4 +67,8 @@ $(document).ready(function() {
     if ( typeof callback === 'function' ) callback(d);
    }
  };
+});
+
+$(window).on('beforeunload', function(){
+   connection.close();
 });
