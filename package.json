@@ -1,0 +1,39 @@
+{
+  "name": "stats.bitshares.eu",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "watch": "webpack --watch"
+  },
+  "keywords": [],
+  "license": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components"
+  ],
+  "devDependencies": {
+    "babel-core": "*",
+    "babel-loader": "*",
+    "bower-webpack-plugin": "*",
+    "css-loader": "~0.6.3",
+    "highcharts-release": "^4.1.8",
+    "imports-loader": "*",
+    "less-loader": "~0.6.2",
+    "node-libs-browser": "*",
+    "style-loader": "~0.6.0",
+    "url-loader": "*",
+    "webpack": "*"
+  },
+  "dependencies": {
+    "bootstrap": "~3.3.5",
+    "datatables": "~1.10.8",
+    "font-awesome": "~4.2.0",
+    "highlight": "~0.2.3",
+    "jade": "^1.11.0",
+    "jade-html-loader": "0.0.3",
+    "jade-loader": "^0.7.1",
+    "jquery-sparkline": "^2.3.0",
+    "semantic-ui": "~2.1.0"
+  }
+}

@@ -1,0 +1,35 @@
+extends ./layout.jade
+
+block content
+  div.ui.celled.grid(style="margin-top:0pt !important;height:100vh;")
+   div.row
+    div.ui.two.wide.column.grid.centered
+     div.ui.tiny.statistic.centered
+      div.label Blocks
+      div.value(id="blocknum") ---
+      div.label Witness
+      div.value(id="lastwitness") ---
+      div.label Last Activity
+      div.value(id="activity") ---
+      div.label Operations
+      div.value(id="optypes") ---
+      div.label Fees
+      div.value(id="feespayed") ---
+      div.label Transfers
+      div.value(id="transfered") ---
+    div.four.wide.column
+     #tps
+    div.ten.wide.column
+     #tpbhist
+   div.row
+    div.eight.wide.column
+     table.display.compact.hover.slider(width="100%" id="txlist")
+      thead
+       tr
+        th -
+        th Blocknr
+        th from
+        th to
+    div.eight.wide.column
+     div(style="height:50vh;overflow:hidden !important")
+      pre.json(id="blockJson")

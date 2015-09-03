@@ -1,21 +1,26 @@
+.ui.celled.grid > .column:not(.row), .ui.celled.grid > .row > .column {
+ padding:0px;
+}
+
 td.details-control {
-    background: url('assets/img/details_open.png') no-repeat center center;
+    background: url('../img/details_open.png') no-repeat center center;
     cursor: pointer;
 }
 tr.shown td.details-control {
-    background: url('assets/img/details_close.png') no-repeat center center;
-}
-
-#blockJson pre {
-  background: #23241f;
+    background: url('../img/details_close.png') no-repeat center center;
 }
 
 
+#blockJson {
+  margin:0pt;
+  padding:0pt;
+  height:100%;
+  overflow: hidden !important;
+}
 
 .hljs {
+  background: #23241f;
   display: block;
-  overflow-x: auto;
-  padding: 0.5em;
   background: #23241f;
   -webkit-text-size-adjust: none;
 }
