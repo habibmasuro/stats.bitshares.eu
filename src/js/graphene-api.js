@@ -90,6 +90,9 @@ function process_block(data) {
    $('#witness_pay').text((p["witness_pay_per_block"]/1e5).toLocaleString() + "/b");
    $('#budget_pay').text( (p["worker_budget_per_day"]/1e5).toLocaleString() + "/d");
   }
+  if ("account_count" in objectMap) {
+   $('#account_count').text(objectMap["account_count"].toLocaleString());
+  }
 }
 
 function process_tx_list(data) {
@@ -196,6 +199,10 @@ function get_blockchain_params() {
   ws_exec([api_ids["database"], "get_objects",[["2.0.0"]]], function(res) {
             objectMap["2.0.0"] = res["result"][0];
           });
+  ws_exec([api_ids["database"], "get_account_count",[]], function(res) {
+            objectMap["account_count"] = res["result"];
+          });
+  
 }
 
 //$(document).ready(function() {
