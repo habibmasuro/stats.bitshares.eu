@@ -87,7 +87,7 @@ var charttps= new Highcharts.Chart({
         }
     }],
     exporting: {
-         enabled: false
+      enabled: false
     },
     credits: {
       enabled: false
@@ -108,10 +108,10 @@ var charttpbhist = new Highcharts.Chart({
     },
     yAxis: {
         title: {
-     text: 'Num. Transactions',
+          text: 'Num. Transactions',
         },
         min : 0,
-               max : 50,
+        max : 10,
     },
     tooltip: {
         headerFormat: '<b>{series.name}</b><br/>',
@@ -121,8 +121,8 @@ var charttpbhist = new Highcharts.Chart({
         name: 'Transactions per block',
         data: [],
         maker: {
-     enabled: false,
-     radius: 0
+           enabled: false,
+           radius: 0
         },
         shadow: true
     }],

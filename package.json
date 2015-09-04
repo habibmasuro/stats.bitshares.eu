@@ -27,13 +27,16 @@
   },
   "dependencies": {
     "bootstrap": "~3.3.5",
-    "datatables": "~1.10.8",
     "font-awesome": "~4.2.0",
     "highlight": "~0.2.3",
+    "highlight.js": "~8.7.0",
     "jade": "^1.11.0",
     "jade-html-loader": "0.0.3",
     "jade-loader": "^0.7.1",
+    "jquery": "^2.1.4",
     "jquery-sparkline": "^2.3.0",
+    "jquery-tablesort": "git+https://github.com/kylefox/jquery-tablesort",
+    "lodash": "^3.10.1",
     "semantic-ui": "~2.1.0"
   }
 }

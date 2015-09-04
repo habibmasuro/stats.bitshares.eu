@@ -1,16 +1,15 @@
-var txtable = require("./rt-datatables.js")
-var chart   = require('./graphene-highcharts.js');
-var hljs    = require("highlight.js")
+//var txtable = require("./rt-datatables.js")
+var chart            = require('./graphene-highcharts.js');
+var hljs             = require("highlight.js")
 
 var host             = "ws://176.9.234.167:8090";
-//var host             = "ws://104.200.28.117:8090";
-
 var rpc_id           = 1;
 var pending_requests = {};
 var api_ids          = {};
 var subscriptions    = {};
 var subscription_id  = 0;
 var connection;
+var objectMap        = {};
 
 var stats               = {};
     stats["tps"]        = [0,0,0,0,0,0,0,0,0,0];
@@ -20,7 +19,6 @@ var stats               = {};
     stats["feespayed"]  = {};
     stats["transfered"] = {};
     stats["optype"]     = {};
-
 
 function addtoStats(name, value) {
  stats[name].push(value);
@@ -33,13 +31,6 @@ function addtoStats(name, value) {
 function printBlockJSON(data) {
   $('#blockJson').html(JSON.stringify(data, null, '  '));
   $('#blockJson').each(function(i, block) {
-   hljs.highlightBlock(block);
- });
-}
-
-function printTxJSON(data) {
-  $('#txJson').html(JSON.stringify(data, null, '  '));
-  $('#txJson').each(function(i, block) {
    hljs.highlightBlock(block);
  });
 }
@@ -57,29 +48,48 @@ function onNotice(d) {
 
 function process_tps(data) {
   var tps;
-  printBlockJSON(data);
+  plainBlock = _.clone(data);
+  delete plainBlock["transactions"]
+  printBlockJSON(plainBlock);
   if ("transactions" in data) {
       tps = data["transactions"].length;
       if (tps > 0) {
-      	 printTxJSON(data["transactions"]);
         addtoStats("lastnumtxs",tps)
       }
   } else {
       tps = 0;
   }
   addtoStats("tps",tps)
-  var sum = stats["tps"].reduce(function(a, b) { return a + b; });
-  var meantps = sum / stats["tps"].length;
+  var sum     = stats["tps"].reduce(function(a, b) { return a + b; });
+  var blockinterval_sec = 1;
+  if ("2.0.0" in objectMap) {
+   blockinterval_sec = objectMap["2.0.0"]["parameters"]["block_interval"]
+  }
+  var meantps = sum / stats["tps"].length / blockinterval_sec;
   // Highcharts
   chart.charttps.series[0].points[0].update(meantps);
   chart.charttpbhist.series[0].addPoint([data["head_block_number"], tps]);
+  if (chart.charttpbhist.yAxis[0].max < tps) { // rescale
+      chart.charttpbhist.yAxis[0].setExtremes(0,int(tps * 1.2))
+  }
   // Sparkline
-  $("#activity").sparkline(stats["lastnumtxs"], { type: 'bar', barColor: '#3366cc '});
+  $("#activity").sparkline(stats["lastnumtxs"], { 
+      type: 'bar', 
+      barColor: '#3366cc',
+      width: '150px'
+   });
 }
 
 function process_block(data) {
-  $('#blocknum').text(   data["head_block_number"].toLocaleString());
+  $('#blocknum').text(data["head_block_number"].toLocaleString());
   $('#lastwitness').text(data["witness"]);
+  if ("2.0.0" in objectMap) {
+   var p = objectMap["2.0.0"]["parameters"];
+   $('#blockint').text(   p["block_interval"]        + "s" );
+   $('#maintint').text(   p["maintenance_interval"]  + "s" );
+   $('#witness_pay').text((p["witness_pay_per_block"]/1e5).toLocaleString() + "/b");
+   $('#budget_pay').text( (p["worker_budget_per_day"]/1e5).toLocaleString() + "/d");
+  }
 }
 
 function process_tx_list(data) {
@@ -89,15 +99,16 @@ function process_tx_list(data) {
       var op   = tx["operations"][opID];
       var to   = "-";
       var from = "-";
+      var opID = op[0];
       if ("to" in op[1])   to   = op[1]["to"];
       if ("from" in op[1]) from = op[1]["from"];
-      var a = {
-           "blocknr" : data[ "head_block_number" ],
-           "from" :    from,
-           "to" :      to,
-           "tx" :      tx
-      }
-      $('#txlist').dataTable().fnAddData(a);
+      var rowId = txID + "-" + opID;
+      $("#txlist tbody").prepend("<tr id='"+rowId+"'>"+
+                                 " <td>"+data["head_block_number"]+"</td>"+
+                                 " <td>"+from+"<span class='ui mini text loader'></span></td>"+
+                                 " <td>"+to+"<span class='ui mini text loader'></span></td>"+
+                                 " <td>"+opID+"</td>"+
+                                 "</tr>");
     }
   }
 }
@@ -105,10 +116,10 @@ function process_tx_list(data) {
 function process_tx_types(data) {
   for (var txID in data["transactions"]) {
     var tx = data["transactions"][txID];
-    stats["lasttxs"].pop(tx);
+    //stats["lasttxs"].pop(tx);
     for (var opID in tx["operations"]) {
       var op   = tx["operations"][opID];
-      stats["lastops"].pop(op);
+      //stats["lastops"].pop(op);
 
       // Op Type
       if (op[0] in stats["optype"])
@@ -136,9 +147,19 @@ function process_tx_types(data) {
     }
   }
   // Sparkline
-  $("#optypes").sparkline(stats["optype"], { type: 'pie'});
-  $("#feespayed").sparkline(stats["feespayed"], { type: 'pie'});
-  $("#transfered").sparkline(stats["transfered"], { type: 'pie'});
+  $("#optypes").sparkline(stats["optype"], { 
+      type: 'pie',
+      width:'150px',
+   });
+  $("#feespayed").sparkline(stats["feespayed"], { 
+      type: 'pie',
+      width:'150px',
+   });
+  $("#transfered").sparkline(stats["transfered"], { 
+      type: 'pie',
+      width:'150px',
+   });
+
 }
 
 function onBlock(d,b) {
@@ -164,11 +185,17 @@ function ws_exec(request,callback) {
  rpc_id++;
 }
 
-function subscribe_blocks(callback) {
+function subscribe_blocks() {
   ws_exec([api_ids["database"], "set_subscribe_callback",[subscription_id, true]]);
   ws_exec([api_ids["database"], "get_objects",[["2.1.0"]]]);
   subscriptions[subscription_id] = onNotice;
   subscription_id++;
+}
+
+function get_blockchain_params() {
+  ws_exec([api_ids["database"], "get_objects",[["2.0.0"]]], function(res) {
+            objectMap["2.0.0"] = res["result"][0];
+          });
 }
 
 //$(document).ready(function() {
@@ -192,6 +219,7 @@ $(window).on('load', function() {
           });
    ws_exec([1,"database",[]], function(res){
              api_ids["database"] = res.result;
+             get_blockchain_params();
              subscribe_blocks();
           });
  };

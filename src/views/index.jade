@@ -5,31 +5,54 @@ block content
    div.row
     div.ui.two.wide.column.grid.centered
      div.ui.tiny.statistic.centered
+
       div.label Blocks
       div.value(id="blocknum") ---
-      div.label Witness
+
+      div.label Block Interval
+      div.value(id="blockint") ---
+
+      div.label Maintenance Interval
+      div.value(id="maintint") ---
+
+      div.label Last Witness
       div.value(id="lastwitness") ---
-      div.label Last Activity
-      div.value(id="activity") ---
-      div.label Operations
-      div.value(id="optypes") ---
-      div.label Fees
-      div.value(id="feespayed") ---
-      div.label Transfers
-      div.value(id="transfered") ---
+      p
+      div.label Witness Pay
+      div.value(id="witness_pay") ---
+
+      div.label Budget Pay
+      div.value(id="budget_pay") ---
+
     div.four.wide.column
      #tps
-    div.ten.wide.column
+    div.ui.two.wide.column.grid.centered
+     div.ui.tiny.statistic.centered
+
+      div.label Last Activity
+      div.value(id="activity") ---
+
+      div.label Operations
+      div.value(id="optypes") ---
+
+      div.label Fees
+      div.value(id="feespayed") ---
+
+      div.label Transfers
+      div.value(id="transfered") ---
+
+    div.eight.wide.column
      #tpbhist
    div.row
     div.eight.wide.column
-     table.display.compact.hover.slider(width="100%" id="txlist")
+     table.ui.very.basic.striped.very.compact.teal.table(width="100%" id="txlist")
       thead
        tr
-        th -
         th Blocknr
         th from
         th to
+        th op
+      tbody
     div.eight.wide.column
      div(style="height:50vh;overflow:hidden !important")
       pre.json(id="blockJson")
