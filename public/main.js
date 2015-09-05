@@ -11,7 +11,9 @@ require("jquery-sparkline");
 
 require("highcharts-release/highcharts.js");
 require("highcharts-release/highcharts-more.js");
-require("highcharts-release/highcharts-3d.js");
+//require("highcharts-release/highcharts-3d.js");
+require("highcharts-release/modules/solid-gauge.js");
+
 require('semantic-ui/dist/semantic.min.js');
 
 require("./js/graphene-api.js");

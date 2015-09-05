@@ -3,53 +3,64 @@ extends ./layout.jade
 block content
   div.ui.celled.grid(style="margin-top:0pt !important;height:100vh;")
    div.row
+
     div.ui.two.wide.column.grid.centered
+     h4.ui.horizontal.divider.header
+      i.cubes.icon
+      | Blockchain
      div.ui.tiny.statistic.centered
-
-      div.label Blocks
       div.value(id="blocknum") ---
-
-      div.label Block Interval
+      div.label Head Block
       div.value(id="blockint") ---
-
-      div.label Maintenance Interval
+      div.label Block Interval
       div.value(id="maintint") ---
-
-      div.label Last Witness
-      div.value(id="lastwitness") ---
-
-      p
-
-      div.label Witness Pay
+      div.label Maintenance Interval
+     h4.ui.horizontal.divider.header
+      i.money.icon
+      | Costs
+     div.ui.tiny.statistic.centered
       div.value(id="witness_pay") ---
-
-      div.label Budget Pay
+      div.label Pay Witness
       div.value(id="budget_pay") ---
-
-      p
-
-      div.label Number Accounts
+      div.label Pay Budget
+     h4.ui.horizontal.divider.header
+      i.users.icon
+      | Accounts
+     div.ui.tiny.statistic.centered
       div.value(id="account_count") ---
 
-    div.four.wide.column
-     #tps
     div.ui.two.wide.column.grid.centered
+     h4.ui.horizontal.divider.header
+       i.bar.chart.icon
+       | Activity 
      div.ui.tiny.statistic.centered
-
-      div.label Last Activity
+      div.label Transactions
       div.value(id="activity") ---
-
+     h4.ui.horizontal.divider.header
+       i.pie.chart.icon
+       | Actions
+     div.ui.tiny.statistic.centered
       div.label Operations
       div.value(id="optypes") ---
-
       div.label Fees
       div.value(id="feespayed") ---
-
       div.label Transfers
       div.value(id="transfered") ---
 
-    div.eight.wide.column
-     #tpbhist
+    div.ui.four.wide.column.grid.centered
+     h4.ui.horizontal.divider.header
+      i.fire.icon
+      | Current Load 
+     div.ui.centered
+      #tps
+
+    div.ui.eight.wide.column.grid.centered
+     h4.ui.horizontal.divider.header
+      i.fire.icon
+      | Number transactions of recent blocks
+     div.ui.centered
+      #tpbhist
+
    div.row
     div.eight.wide.column
      table.ui.very.basic.striped.very.compact.teal.table(width="100%" id="txlist")

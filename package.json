@@ -2,6 +2,7 @@
   "name": "stats.bitshares.eu",
   "version": "1.0.0",
   "description": "",
+  "main": "server.js",
   "scripts": {
     "watch": "webpack --watch"
   },
@@ -26,15 +27,20 @@
     "webpack": "*"
   },
   "dependencies": {
+    "async": "^1.4.2",
     "bootstrap": "~3.3.5",
+    "express": "^4.12.3",
     "font-awesome": "~4.2.0",
     "highlight.js": "~8.7.0",
+    "http-proxy": "^1.10.1",
     "jade": "^1.11.0",
     "jade-html-loader": "0.0.3",
     "jade-loader": "^0.7.1",
     "jquery": "^2.1.4",
     "jquery-sparkline": "^2.3.0",
     "lodash": "^3.10.1",
-    "semantic-ui": "~2.1.0"
+    "monk": "^1.0.1",
+    "semantic-ui": "~2.1.0",
+    "ws": "^0.8.0"
   }
 }
