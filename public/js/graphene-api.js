@@ -5,6 +5,7 @@ var port             = "8080"
 var host             = "ws://" + ((window.location.protocol == "file:") ?  "localhost" : window.location.hostname) + ":8080";
 var objectMap        = {};
 var lastStats        = [];
+var connection;
 
 /***********************************************
  * Custom methods
@@ -93,29 +94,50 @@ function onNotice(data) {
   }
 }
 
-/***********************************************
- * API
- ***********************************************/
-$(window).on('load', function() {
+function setConnectedStatus(type) {
+ if (type == "connected") {
+  $('#connIndBut').attr('class', 'left green circle button icon');
+  $('#connIndDiv').attr('class', '');
+  $('#connIndDiv').text(type);
+ } else {
+  $('#connIndBut').attr('class', 'red red circle button icon');
+  $('#connIndDiv').attr('class', 'ui active mini inline loader');
+  $('#connIndDiv').text('');
+ }
+}
+
+function setup_ws_connection() {
  console.log('Connecting to WebSocket: '+host);
- hljs.initHighlightingOnLoad();
  connection = new WebSocket(host);
+
  connection.onopen = function (e) {
    console.log('WebSocket opened');
+   setConnectedStatus("connected");
  };
- // Log errors
  connection.onerror = function (error) {
    console.log('WebSocket Error ' + error);
+   setConnectedStatus("Error");
  };
- // Log messages from the server
+ connection.onclose = function (error) {
+   console.log('WebSocket closed ' + error);
+   setConnectedStatus("disconnected");
+   setTimeout(setup_ws_connection, 1000);
+ };
  connection.onmessage = function (e) {
    //console.log('Server:'+e.data);
    //console.log(e.data.length);
    onNotice(JSON.parse(e.data));
  };
-});
-$(window).on('beforeunload', function(){
-   connection.close();
+ $(window).on('beforeunload', connection.close);
+ return connection;
+}
+
+/***********************************************
+ * Window load
+ ***********************************************/
+$(window).on('load', function() {
+ setup_ws_connection();
+ hljs.initHighlightingOnLoad();
 });
 
 module.exports = {

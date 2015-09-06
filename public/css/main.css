@@ -2,6 +2,14 @@
  padding:0px;
 }
 
+div.footer {
+  position: absolute !important;
+  margin-bottom:0pt !important;
+  padding: .1pt;
+  bottom: 0;
+  width: 100%;
+}
+
 td.details-control {
     background: url('../img/details_open.png') no-repeat center center;
     cursor: pointer;

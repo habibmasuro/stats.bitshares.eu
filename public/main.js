@@ -5,6 +5,7 @@ require('semantic-ui/dist/components/grid.min.css');
 require('semantic-ui/dist/components/table.min.css');
 require('semantic-ui/dist/components/icon.min.css');
 require('semantic-ui/dist/components/label.min.css');
+require('semantic-ui/dist/components/button.min.css');
 
 // Charting
 require("jquery-sparkline");
