@@ -6,6 +6,7 @@ var subscriptions    = {};
 var subscription_id  = 0;
 var objectMap        = {};
 var WebSocket        = require('ws');
+var Promise          = require('promise');
 var backend_api      = new WebSocket(host);
 var _                = require("lodash");
 var backend_api;
