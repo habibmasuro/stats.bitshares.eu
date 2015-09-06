@@ -4,6 +4,7 @@ var hljs             = require("highlight.js")
 var port             = "8080"
 var host             = "ws://" + ((window.location.protocol == "file:") ?  "localhost" : window.location.hostname) + ":8080";
 var objectMap        = {};
+var lastStats        = [];
 
 /***********************************************
  * Custom methods
@@ -13,21 +14,6 @@ function printBlockJSON(data) {
   $('#blockJson').each(function(i, block) {
    hljs.highlightBlock(block);
  });
-}
-
-function process_tps(stats) {
-  var tps = stats["tps"];
-  chart.charttps.series[0].points[0].update(stats["meantps"].toFixed(2));
-  chart.charttpbhist.series[0].addPoint([stats["head_block_number"], tps]);
-  if (chart.charttpbhist.yAxis[0].max < tps) { // rescale
-      chart.charttpbhist.yAxis[0].setExtremes(0,Math.floor(tps * 1.2))
-  }
-  // Sparkline
-  $("#activity").sparkline(stats["lastnumtxs"], { 
-      type: 'bar', 
-      barColor: '#3366cc',
-      width: '150px'
-   });
 }
 
 function process_parameters(data) {
@@ -56,18 +42,29 @@ function process_tx(txs) {
   });
 }
 
-function process_stats(stats) {
-  // Sparkline
-  $("#optypes").sparkline(stats["optype"], { 
-      type: 'pie',
-   });
-  $("#feespayed").sparkline(stats["feespayed"], { 
-      type: 'pie',
-   });
-  $("#transfered").sparkline(stats["transfered"], { 
-      type: 'pie',
-   });
-
+function process_stats() {
+  if ("laststats" in objectMap) {
+     var lastStats = objectMap["laststats"];
+     chart.updateGauge(lastStats["meantps"]);
+     chart.updateTxHist([lastStats["head_block_number"], lastStats["tps"]]);
+     var tps = lastStats["tps"];
+     // Sparkline
+     $("#activity").sparkline(lastStats["lastnumtxs"], { 
+         type: 'bar', 
+         barColor: '#3366cc',
+         width: '150px'
+      });
+     // Sparkline
+     $("#optypes").sparkline(lastStats["optype"], { 
+         type: 'pie',
+      });
+     $("#feespayed").sparkline(lastStats["feespayed"], { 
+         type: 'pie',
+      });
+     $("#transfered").sparkline(lastStats["transfered"], { 
+         type: 'pie',
+      });
+  }
 }
 
 function process_block(block) {
@@ -81,16 +78,13 @@ function onNotice(data) {
      process_block(data["data"]);
      break;
 
-   case 'tps':
-     process_tps(data["data"]);
-     break;
-
    case 'txs':
      process_tx(data["data"]);
      break;
 
    case 'stats':
-     process_stats(data["data"]);
+     objectMap["laststats"] = _.clone(data["data"]);
+     process_stats();
      break;
 
    case 'obj':
@@ -103,6 +97,7 @@ function onNotice(data) {
  * API
  ***********************************************/
 $(window).on('load', function() {
+ console.log('Connecting to WebSocket: '+host);
  hljs.initHighlightingOnLoad();
  connection = new WebSocket(host);
  connection.onopen = function (e) {
@@ -114,8 +109,7 @@ $(window).on('load', function() {
  };
  // Log messages from the server
  connection.onmessage = function (e) {
-   //console.log('Server:');
-   //console.log(JSON.parse(e.data));
+   //console.log('Server:'+e.data);
    //console.log(e.data.length);
    onNotice(JSON.parse(e.data));
  };
@@ -123,3 +117,10 @@ $(window).on('load', function() {
 $(window).on('beforeunload', function(){
    connection.close();
 });
+
+module.exports = {
+          lastStats         : lastStats,
+          chart         : chart,
+          objectMap     : objectMap,
+          process_stats : process_stats,
+         };

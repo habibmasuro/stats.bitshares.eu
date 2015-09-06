@@ -1,11 +1,14 @@
-var $ = require('jquery');
-window.jQuery = $;
-window.$ = $;
-
 require("font-awesome/less/font-awesome.less");
 require('semantic-ui/dist/semantic.min.css');
 require('semantic-ui/dist/components/grid.min.css');
 require('semantic-ui/dist/components/table.min.css');
+require('semantic-ui/dist/components/icon.min.css');
+require('semantic-ui/dist/components/label.min.css');
+
+
+require('semantic-ui/dist/themes/basic/assets/fonts/icons.woff');
+
+
 require("./css/main.css");
 require("jquery-sparkline");
 
@@ -16,4 +19,4 @@ require("highcharts-release/modules/solid-gauge.js");
 
 require('semantic-ui/dist/semantic.min.js');
 
-require("./js/graphene-api.js");
+window.graphene = require("./js/graphene-api.js");

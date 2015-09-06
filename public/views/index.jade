@@ -5,10 +5,10 @@ block content
    div.row
 
     div.ui.two.wide.column.grid.centered
-     h4.ui.horizontal.divider.header
+     h4.ui.horizontal.divider.header(style="padding-top:1ex")
       i.cubes.icon
       | Blockchain
-     div.ui.tiny.statistic.centered
+     div.ui.tiny.statistic.centered(style="margin:0")
       div.value(id="blocknum") ---
       div.label Head Block
       div.value(id="blockint") ---
@@ -18,7 +18,7 @@ block content
      h4.ui.horizontal.divider.header
       i.money.icon
       | Costs
-     div.ui.tiny.statistic.centered
+     div.ui.tiny.statistic.centered(style="margin:0")
       div.value(id="witness_pay") ---
       div.label Pay Witness
       div.value(id="budget_pay") ---
@@ -26,20 +26,20 @@ block content
      h4.ui.horizontal.divider.header
       i.users.icon
       | Accounts
-     div.ui.tiny.statistic.centered
+     div.ui.tiny.statistic.centered(style="margin:0")
       div.value(id="account_count") ---
 
     div.ui.two.wide.column.grid.centered
-     h4.ui.horizontal.divider.header
+     h4.ui.horizontal.divider.header(style="padding-top:1ex")
        i.bar.chart.icon
        | Activity 
-     div.ui.tiny.statistic.centered
+     div.ui.tiny.statistic.centered(style="margin:0")
       div.label Transactions
       div.value(id="activity") ---
      h4.ui.horizontal.divider.header
        i.pie.chart.icon
        | Actions
-     div.ui.tiny.statistic.centered
+     div.ui.tiny.statistic.centered(style="margin:0")
       div.label Operations
       div.value(id="optypes") ---
       div.label Fees
@@ -48,14 +48,14 @@ block content
       div.value(id="transfered") ---
 
     div.ui.four.wide.column.grid.centered
-     h4.ui.horizontal.divider.header
+     h4.ui.horizontal.divider.header(style="padding-top:1ex")
       i.fire.icon
       | Current Load 
      div.ui.centered
       #tps
 
     div.ui.eight.wide.column.grid.centered
-     h4.ui.horizontal.divider.header
+     h4.ui.horizontal.divider.header(style="padding-top:1ex")
       i.fire.icon
       | Number transactions of recent blocks
      div.ui.centered

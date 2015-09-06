@@ -40,6 +40,7 @@
     "jquery-sparkline": "^2.3.0",
     "lodash": "^3.10.1",
     "monk": "^1.0.1",
+    "promise": "^7.0.4",
     "semantic-ui": "~2.1.0",
     "ws": "^0.8.0"
   }

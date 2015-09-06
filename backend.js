@@ -8,7 +8,6 @@ var objectMap        = {};
 var WebSocket        = require('ws');
 var backend_api      = new WebSocket(host);
 var _                = require("lodash");
-var async            = require("async");
 var backend_api;
 
 var WebSocketServer = require('ws').Server;
@@ -49,21 +48,19 @@ function onNotice(d) {
    if (data === undefined) return;
    if ("head_block_number" in data) {
        var blocknum = data["head_block_number"];
-       ws_exec([api_ids["database"], "get_block",[blocknum]], function(res){
+       ws_exec([api_ids["database"], "get_block",[blocknum]]).then(function(res){
        		 onBlock(res,d);
 	      });
    }
 }
 
 function process_tps(data) {
-  var tps;
+  var tps = 0;
   if ("transactions" in data) {
       tps = data["transactions"].length;
       if (tps > 0) {
         addtoStats("lastnumtxs",tps)
       }
-  } else {
-      tps = 0;
   }
   addtoStats("tps",tps)
 
@@ -73,12 +70,11 @@ function process_tps(data) {
    blockinterval_sec = objectMap["2.0.0"]["parameters"]["block_interval"]
   }
   var meantps = sum / stats["tps"].length / blockinterval_sec;
-
   toUser({
-            "type" : "tps",
+            "type" : "stats",
             "data" : {
-               "tps" : tps,
-               "meantps" : meantps,
+               "tps"       : tps,
+               "meantps"   : meantps,
                "head_block_number" : data["head_block_number"],
                "history"   : stats[ "tps"        ],
                "lastnumtxs": stats[ "lastnumtxs" ],
@@ -91,66 +87,12 @@ function process_tps(data) {
          });
 }
 
-var transaction_update = [];
-
-function process_each_op(op, ref_block) {
-  var to   = "-";
-  var from = "-";
-  var opID = op[0];
-  if ("to" in op[1])   to   = op[1]["to"];
-  if ("from" in op[1]) from = op[1]["from"];
-  var rowId = ref_block + "." + opID;
-  transaction_update.push({
-     id        : rowId,
-     ref_block : ref_block,
-     to        : to,
-     from      : from,
-     opID      : opID,
-  });
-  /*
-  var to   = "-";
-  var from = "-";
-  var opID = op[0];
-  var rowId = ref_block + "." + opID;
-  if (opID == 0) {
-   async.parallel({
-         to : function (callback) {
-               get_account(op[1]["to"], function(r) {
-                  callback(null,r["result"][0]["name"]);
-               })
-             },
-         from : function (callback) {
-               get_account(op[1]["from"], function(r) {
-                   callback(null,r["result"][0]["name"])
-                 })
-             },
-          },
-        function(err, res) {
-            transaction_update.push({
-               id        : rowId,
-               ref_block : ref_block,
-               to        : res.to,
-               from      : res.from,
-               opID      : opID,
-            });
-         });
-  } else {
-    transaction_update.push({
-       id        : rowId,
-       ref_block : ref_block,
-       to        : to,
-       from      : from,
-       opID      : opID,
-    });
-  }
-  */
-
+function process_op_stats(op) {
   // Op Type
   if (op[0] in stats["optype"])
     stats["optype"][ op[0] ] += 1;
   else
     stats["optype"][ op[0] ]  = 1;
-
   if ("fee" in op[1]) {
      var amount = op[1]["fee"]["amount"];
      var asset  = op[1]["fee"]["asset_id"];
@@ -170,27 +112,60 @@ function process_each_op(op, ref_block) {
   }
 }
 
-function process_each_tx(tx) {
-  tx["operations"].forEach(function (op) {
-     process_each_op(op, tx["ref_block_num"]);
-  });
+function process_each_op(op, ref_block) {
+  var to   = "-";
+  var from = "-";
+  var opID = op[0];
+  var rowId = ref_block + "." + opID;
+  if (opID == 0) {
+     return Promise.all([
+             get_account(op[1]["to"]),
+             get_account(op[1]["from"])
+         ]).then(function(res) {
+            return {
+                      "id"        : rowId,
+                      "ref_block" : ref_block,
+                      "to"        : res[0]["result"][0]["name"],
+                      "from"      : res[1]["result"][0]["name"],
+                      "opID"      : opID
+                   };
+         });
+  } else {
+    return Promise.resolve({
+             "id"        : rowId,
+             "ref_block" : ref_block,
+             "to"        : to,
+             "from"      : from,
+             "opID"      : opID,
+          })
+  }
 }
 
 function process_tx(data) {
-  transaction_update = []; // reset
-  data["transactions"].forEach( function(tx) {
-     process_each_tx(tx);
-  })
-
-  // http://book.mixu.net/node/ch7.html
-  if (transaction_update.length > 0)
-     toUser({"type": "txs",
-             "data": transaction_update
-            });
+  var numTxs = data["transactions"].length;
+  if (numTxs) process.stdout.write("T"+numTxs);
+  var cntTx = 0;
+  var OpPromises = [];  
+  data["transactions"].forEach(function(tx,i) {
+    var numOps = tx["operations"].length;
+    var cntOp = 0;
+    tx["operations"].forEach(function (op) {
+       OpPromises.push(process_each_op(op, tx["ref_block_num"]));
+       process_op_stats(op);
+    });
+  });
+  return Promise.all(OpPromises)
+  .then(function (parsed_op_list) {
+    if (parsed_op_list.length > 0) {
+       toUser({"type": "txs",
+               "data": parsed_op_list
+              });
+    }
+  });
 }
 
 function onBlock(d,b) {
-  console.log("new Block");
+  process.stdout.write("b");
   var data = b[0][0];
   _.extend(data, d["result"]);
 
@@ -202,10 +177,6 @@ function onBlock(d,b) {
             "type" : "block",
             "data" : data,
          });
-  toUser({
-            "type" : "stats",
-            "data" : stats,
-         });
 }
 
 /*
@@ -213,19 +184,25 @@ function onBlock(d,b) {
  *
  *
  */
+var pending_promises = [];
 function ws_exec(request,callback) {
- var req = {}
+ var req    = {}
  req.method = "call"
- req.id = rpc_id;
+ req.id     = ++rpc_id;
  req.params = request
- pending_requests[rpc_id] = callback;
- backend_api.send(JSON.stringify(req));
  //console.log(">"+JSON.stringify(req));
- rpc_id++;
+ return new Promise(function(resolve, reject) {
+  pending_promises[rpc_id] = {
+   resolve : resolve,
+   reject  : reject
+  }
+  pending_requests[rpc_id] = callback;
+  backend_api.send(JSON.stringify(req));
+ });
 }
 
-function get_account(id, callback) {
-  ws_exec([api_ids["database"], "get_objects",[[id]]], callback);
+function get_account(id) {
+  return ws_exec([api_ids["database"], "get_objects",[[id]]]);
 }
 
 function subscribe_blocks() {
@@ -236,13 +213,12 @@ function subscribe_blocks() {
 }
 
 function get_blockchain_params() {
-  ws_exec([api_ids["database"], "get_objects",[["2.0.0"]]], function(res) {
+  ws_exec([api_ids["database"], "get_objects",[["2.0.0"]]]).then(function(res) {
             objectMap["2.0.0"] = res["result"][0];
           });
-  ws_exec([api_ids["database"], "get_account_count",[]], function(res) {
+  ws_exec([api_ids["database"], "get_account_count",[]]).then(function(res) {
             objectMap["account_count"] = res["result"];
           });
-  
 }
 
 backend_api.onerror = function (error) {
@@ -252,13 +228,13 @@ backend_api.onerror = function (error) {
 backend_api.on('open', function open() {
    console.log('WebSocket opened');
    ws_exec([1,"login",["bytemaster","supersecret"]]);
-   ws_exec([1,"network_broadcast",[]], function(res){
+   ws_exec([1,"network_broadcast",[]]).then(function(res){
              api_ids["network_broadcast"] = res.result;
           });
-   ws_exec([1,"history",[]], function(res){
+   ws_exec([1,"history",[]]).then(function(res){
              api_ids["history"] = res.result;
           });
-   ws_exec([1,"database",[]], function(res){
+   ws_exec([1,"database",[]]).then(function(res){
              api_ids["database"] = res.result;
              get_blockchain_params();
              subscribe_blocks();
@@ -275,8 +251,11 @@ backend_api.on('message', function(e, flags) {
      if ( typeof callback === 'function' ) 
          callback(d["params"][1]);
    } else {
+    pending_promises[d.id].resolve(d);
+    /*
     callback = pending_requests[d.id];
     if ( typeof callback === 'function' ) 
         callback(d);
+    */
    }
 });

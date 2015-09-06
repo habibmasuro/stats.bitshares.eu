@@ -1,6 +1,5 @@
 var Higcharts = require("highcharts-release");
-
-var charttps= new Highcharts.Chart({
+var solidgaugesettings = {
     chart: {
         renderTo: 'tps',
         type: 'solidgauge'
@@ -75,9 +74,10 @@ var charttps= new Highcharts.Chart({
             valueSuffix: ' tps'
         }
     }]
-});
+};
+;
 
-var charttpbhist = new Highcharts.Chart({
+var histsettings = {
     chart: {
         renderTo: 'tpbhist',
     },
@@ -115,9 +115,25 @@ var charttpbhist = new Highcharts.Chart({
     credits: {
       enabled: false
     },
-});
+};
+
+var charttps     = new Highcharts.Chart(solidgaugesettings);
+var charttpbhist = new Highcharts.Chart(histsettings);
+
+function updateGauge(tps) {
+  charttps.series[0].points[0].update(tps,true);
+}
+
+function updateTxHist(pair) {
+  charttpbhist.series[0].addPoint(pair);
+  if (charttpbhist.yAxis[0].max < pair[1]) { // rescale
+      charttpbhist.yAxis[0].setExtremes(0,Math.floor(pair[1] * 1.2))
+  }
+}
 
 module.exports = { 
       charttps     : charttps,
-      charttpbhist : charttpbhist
+      charttpbhist : charttpbhist,
+      updateGauge  : updateGauge,
+      updateTxHist : updateTxHist,
 };

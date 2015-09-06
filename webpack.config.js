@@ -36,11 +36,12 @@ var config = {
          excludes: /.*\.less/
        }),
        new webpack.ProvidePlugin({
-         $:      "jquery",
-         jQuery: "jquery",
-         _:      "lodash",
-         "window.jQuery": "jquery",
-         "root.jQuery": "jquery",
+         $               : "jquery",
+         jQuery          : "jquery",
+         "window.jQuery" : "jquery",
+         "window.$"      : "jquery",
+         "root.jQuery"   : "jquery",
+         _               : "lodash",
        })
     ],
     node:    {fs: "empty"},  // required for jade-html-loader to work
