@@ -21,14 +21,13 @@ var config = {
 
     module: {
         loaders: [
-            { test: /\.woff2$/,                      loader: "url-loader?limit=10000&mimetype=application/font-woff" },
-            { test: /\.(woff|svg|ttf|eot)([\?]?.*)$/,loader: "file-loader?name=[name].[ext]"},
-            { test: path.join(__dirname, 'js'),      loader: 'babel-loader', excludes: [moduleDirectories]},
-            { test: /\.less$/,                       loader: "style!css!less" },
-            { test: /\.css$/,                        loader: "style!css" },
-            { test: /\.png$/,                        loader: "url-loader?mimetype=image/png" },
-            { test: /\.jade$/,                       loader: "jade-loader" },
-            { test: /index\.jade$/,                  loader: "file-loader?name=[name].html&./public/views!jade-html-loader" },
+            { test: /\.(woff|woff2|svg|ttf|eot)([\?]?.*)$/,loader: "file-loader?name=[name].[ext]"},
+            { test: path.join(__dirname, 'js'),            loader: 'babel-loader', excludes: [moduleDirectories]},
+            { test: /\.less$/,                             loader: "style!css!less" },
+            { test: /\.css$/,                              loader: "style!css" },
+            { test: /\.png$/,                              loader: "url-loader?mimetype=image/png" },
+            { test: /\.jade$/,                             loader: "jade-loader" },
+            { test: /index\.jade$/,                        loader: "file-loader?name=[name].html&./public/views!jade-html-loader" },
         ]
     },
     plugins: [
