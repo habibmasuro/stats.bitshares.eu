@@ -185,9 +185,6 @@ function publish_peers() {
 
 function onBlock(block) {
   process.stdout.write("b");
-
-  var nontxBlock = _.clone(block);
-  delete nontxBlock["transactions"];
   process_tps(block);
   process_tx(block);
   sendStats();
