@@ -1,5 +1,5 @@
-//var host             = "ws://176.9.234.167:8090"
-var host             = "ws://localhost:8090"
+var host             = "ws://176.9.234.167:8090"
+//var host             = "ws://localhost:8090"
 var objectMap        = {};
 var WebSocket        = require('ws');
 var Promise          = require('promise');
@@ -51,13 +51,16 @@ function onNotice(d) {
      var id    = n[2];
      
      if (notice["id"] == "2.1.0") {
+       objectMap["2.1.0"] = notice;
+       objToUser("2.1.0");
        blocknum = notice["head_block_number"];
-       ws_exec([api_ids["database"], "get_block",[blocknum]]).then(function(res){
-       		 onBlock(res,d);
+       ws_exec([api_ids["database"], "get_block",[blocknum]]).then(function(block){
+       		 onBlock(block["result"]);
 	      });
      };
      if (notice["id"] == "2.0.0") {
-         objectMap["2.0.0"] = notice;
+       objectMap["2.0.0"] = notice;
+       objToUser("2.1.0");
      }
    });
 }
@@ -177,25 +180,17 @@ function sendStats() {
 };
 
 function publish_peers() {
- if (peerMap.length > 0)
-   toUser({"type":"peers","data":peerMap});
- setTimeout(publish_peers, 5000);
+ toUser({"type":"peers","data":peerMap});
 }
 
-function onBlock(d,b) {
+function onBlock(block) {
   process.stdout.write("b");
-  var data = b[0][0];
-  _.extend(data, d["result"]);
 
-  process_tps(data);
-  process_tx(data);
+  var nontxBlock = _.clone(block);
+  delete nontxBlock["transactions"];
+  process_tps(block);
+  process_tx(block);
   sendStats();
-
-  delete data["transactions"];
-  toUser({
-            "type" : "block",
-            "data" : data,
-         });
 }
 
 /*
@@ -224,24 +219,26 @@ function get_blockchain_params() {
           });
 }
 
-function fetch_connected_peers() {
-  ws_exec([api_ids["network_node"], "get_connected_peers",[]]).then(function(res){
-    var map = [];
-    var peers = res["result"];
-    peers.forEach(function(peer) {
-     var p = {
-         addr : peer["info"]["addr"],
-         platform : peer["info"]["platform"],
-         geo : geoip.lookup(peer["info"]["addr"].split(':')[0])
 
-        };
-        map.push(p);
-        if(map.length == peers.length) {
-            peerMap = map;
-            publish_peers();
-        }
-    });
-  });
+
+function fetch_connected_peers() {
+  ws_exec([api_ids["network_node"], "get_connected_peers",[]]).then(function (res) {
+     var map = [];
+     var peers = res["result"];
+     peers.forEach(function(peer,index) {
+      var geoObj = geoip.lookup(peer["info"]["addr"].split(':')[0]);
+      var p = {
+          addr     : peer["info"]["addr"],
+          platform : peer["info"]["platform"],
+          geo      : { "ll" :  geoObj ? geoObj["ll"] : [0,0] },
+      };
+      map.push(p);
+      if(map.length == peers.length) {
+          peerMap = map;
+          publish_peers();
+      }
+     });
+   });
 }
 
 
@@ -271,6 +268,7 @@ function setup_ws_connection() {
          ws_exec([1,"network_node",[]]).then(function(res){
                      api_ids["network_node"] = res.result;
                      fetch_connected_peers();
+                     setInterval(fetch_connected_peers, 30000);
                 });
          ws_exec([1,"database",[]]).then(function(res){
                    api_ids["database"] = res.result;

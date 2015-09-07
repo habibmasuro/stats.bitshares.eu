@@ -17,4 +17,4 @@ require("highcharts-release/modules/solid-gauge.js");
 
 // Custom
 require("./css/main.css");
-window.graphene = require("./js/graphene-api.js");
+window.graphene = require("./js/graphene.js");
