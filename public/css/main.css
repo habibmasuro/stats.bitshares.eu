@@ -1,13 +1,26 @@
-.ui.celled.grid > .column:not(.row), .ui.celled.grid > .row > .column {
- padding:0px;
+html, body {
+ height: 100% !important;
+ overflow: hidden;
 }
 
-div.footer {
-  position: absolute !important;
-  margin-bottom:0pt !important;
-  padding: .1pt;
-  bottom: 0;
-  width: 100%;
+maingrid {
+ height: 100% !important;
+ overflow: hidden;
+}
+.ui.tiny.statistic {
+  margin:0px;
+}
+.footer {
+ bottom: 0pt;
+ position: fixed !important;
+ margin:0pt;
+ padding:0pt;
+
+}
+
+#tps {
+ height: 250px;
+ width: 100%;
 }
 
 td.details-control {
@@ -24,6 +37,8 @@ tr.shown td.details-control {
   padding:0pt;
   height:100%;
   overflow: hidden !important;
+  font-size: 9pt;
+  line-height: 100%;
 }
 
 /*

@@ -5,8 +5,6 @@ var solidgaugesettings = {
         type: 'solidgauge'
     },
     pane: {
-        center: ['50%', '85%'],
-        size: '99%',
         startAngle: -90,
         endAngle: 90,
         background: {

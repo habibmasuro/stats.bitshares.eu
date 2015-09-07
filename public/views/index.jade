@@ -1,98 +1,28 @@
 extends ./layout.jade
 
 block content
- div.ui.celled.grid(style="margin-top:0pt !important;height:100vh;")
+ div.ui.celled.padded.equal.height.grid(id="maingrid")
+
   div.row
-
    div.ui.two.wide.column.grid.centered
-    h4.ui.horizontal.divider.header(style="padding-top:1ex")
-     i.cubes.icon
-     | Blockchain
-    div.ui.tiny.statistic.centered(style="margin:0")
-     div.value(id="blocknum") ---
-     div.label Head Block
-     div.value(id="blockint") ---
-     div.label Block Interval
-     div.value(id="maintint") ---
-     div.label Maintenance Interval
-    h4.ui.horizontal.divider.header
-     i.money.icon
-     | Costs
-    div.ui.tiny.statistic.centered(style="margin:0")
-     div.value(id="witness_pay") ---
-     div.label Pay Witness
-     div.value(id="budget_pay") ---
-     div.label Pay Budget
-    h4.ui.horizontal.divider.header
-     i.users.icon
-     | Accounts
-    div.ui.tiny.statistic.centered(style="margin:0")
-     div.value(id="account_count") ---
-
+    include ./blockchain.jade
+    include ./costs.jade
+    include ./accounts.jade
    div.ui.two.wide.column.grid.centered
-    h4.ui.horizontal.divider.header(style="padding-top:1ex")
-      i.bar.chart.icon
-      | Activity 
-    div.ui.tiny.statistic.centered(style="margin:0")
-     div.label Transactions
-     div.value(id="activity") ---
-    h4.ui.horizontal.divider.header
-      i.pie.chart.icon
-      | Actions
-    div.ui.tiny.statistic.centered(style="margin:0")
-     div.label Operations
-     div.value(id="optypes") ---
-     div.label Fees
-     div.value(id="feespayed") ---
-     div.label Transfers
-     div.value(id="transfered") ---
-
+    include ./activity.jade
    div.ui.four.wide.column.grid.centered
-    h4.ui.horizontal.divider.header(style="padding-top:1ex")
-     i.fire.icon
-     | Current Load 
-    div.ui.centered
-     #tps
-
+    include ./load.jade
+    include ./nodes.jade
    div.ui.eight.wide.column.grid.centered
-    h4.ui.horizontal.divider.header(style="padding-top:1ex")
-     i.fire.icon
-     | Number transactions of recent blocks
-    div.ui.centered
-     #tpbhist
+    include ./txhist.jade
 
   div.row
    div.eight.wide.column
-    table.ui.very.basic.striped.very.compact.teal.table(width="100%" id="txlist")
-     thead
-      tr
-       th Blocknr
-       th from
-       th to
-       th op
-     tbody
-   div.eight.wide.column
-    div(style="height:50vh;overflow:hidden !important")
-     pre.json(id="blockJson")
+    include ./lasttxtable.jade
 
- div.ui.horizontal.segments.footer
+   div.seven.wide.column
+    include ./lastblock.jade
 
-  div.ui.left.aligned.segment
-   div.ui.icon.buttons
-    a.button.ui.labeled.icon.button(href="https://github.com/BitSharesEurope/stats.bitshares.eu",target="_blank")
-     i.left.github.alternate.icon
-     | Github
-    a.button.ui.labeled.icon.button(href="https://bitsharestalk.org/index.php/topic,18319.0.html",target="_blank")
-     i.comment.outline.icon
-     | BitSharesTalk
-    button.ui.labeled.icon.button
-     i.gift.icon
-     tt donations.xeroc 
-    button.ui.labeled.icon.button
-     i.copyright.icon
-     | Fabian Schuh
-     
-  div.ui.right.aligned.segment
-   button.ui.labeled.icon.button
-    i.left.gray.circle.button.icon(id="connIndBut")
-    span.ui.active.mini.inline.loader(id="connIndDiv")
+  div.row
+   div.ui.column.footer
+    include ./footer.jade

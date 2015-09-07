@@ -1,4 +1,5 @@
 var chart            = require('./graphene-highcharts.js');
+var nodeMap          = require('./graphene-nodeMap.js');
 var hljs             = require("highlight.js")
 
 var port             = "8080"
@@ -18,7 +19,6 @@ function printBlockJSON(data) {
 }
 
 function process_parameters(data) {
-  $('#blocknum').text(data["head_block_number"].toLocaleString());
   $('#lastwitness').text(data["witness"]);
   if ("2.0.0" in objectMap) {
    var p = objectMap["2.0.0"]["parameters"];
@@ -49,6 +49,8 @@ function process_stats() {
      chart.updateGauge(lastStats["meantps"]);
      chart.updateTxHist([lastStats["head_block_number"], lastStats["tps"]]);
      var tps = lastStats["tps"];
+
+     $('#blocknum').text(lastStats["head_block_number"].toLocaleString());
      // Sparkline
      $("#activity").sparkline(lastStats["lastnumtxs"], { 
          type: 'bar', 
@@ -73,6 +75,21 @@ function process_block(block) {
   process_parameters(block);
 }
 
+function process_peers(peers) {
+ var bubbles = [];
+ peers.forEach(function(peer) {
+  if (peer["geo"]) {
+     bubbles.push({
+       latitude: peer["geo"]["ll"][0],
+       longitude: peer["geo"]["ll"][1],
+       radius: 5,
+       fillKey: 'node',
+     });
+  }
+ });
+ nodeMap.map.bubbles(bubbles);
+}
+
 function onNotice(data) {
   switch(data["type"]) {
    case 'block':
@@ -91,6 +108,10 @@ function onNotice(data) {
    case 'obj':
      objectMap[data["id"]] = data["data"];
      break;
+
+   case 'peers':
+     process_peers(data["data"]);
+     break
   }
 }
 
@@ -121,7 +142,7 @@ function setup_ws_connection() {
  connection.onclose = function (error) {
    console.log('WebSocket closed ' + error);
    setConnectedStatus("disconnected");
-   setTimeout(setup_ws_connection, 1000);
+   setTimeout(setup_ws_connection, 5000);
  };
  connection.onmessage = function (e) {
    //console.log('Server:'+e.data);
@@ -141,8 +162,9 @@ $(window).on('load', function() {
 });
 
 module.exports = {
-          lastStats         : lastStats,
+          lastStats     : lastStats,
           chart         : chart,
+          nodeMap       : nodeMap,
           objectMap     : objectMap,
           process_stats : process_stats,
          };

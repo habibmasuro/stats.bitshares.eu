@@ -1,15 +1,12 @@
-var host             = "ws://176.9.234.167:8090"
-var rpc_id           = 1;
-var pending_requests = {};
-var api_ids          = {};
-var subscriptions    = {};
-var subscription_id  = 0;
+//var host             = "ws://176.9.234.167:8090"
+var host             = "ws://localhost:8090"
 var objectMap        = {};
 var WebSocket        = require('ws');
 var Promise          = require('promise');
-var backend_api      = new WebSocket(host);
 var _                = require("lodash");
-var backend_api;
+var geoip            = require('geoip-lite');
+var peerMap          = [];
+var blocknum;
 
 var WebSocketServer = require('ws').Server;
 var frontend_api = new WebSocketServer({port: 8080});
@@ -31,6 +28,8 @@ function addtoStats(name, value) {
 frontend_api.on('connection', function(ws) {
      objToUser("2.0.0");
      objToUser("account_count");
+     publish_peers();
+     sendStats();
      ws.on('message', function(message) {});
 });
 
@@ -43,16 +42,24 @@ function toUser(data) {
  });
 }
 
-
 function onNotice(d) {
-   var data = d[0][0];
-   if (data === undefined) return;
-   if ("head_block_number" in data) {
-       var blocknum = data["head_block_number"];
+   var notices = d[0];
+   notices.forEach(function (notice) {
+     var n = notice["id"].split(".");
+     var space = n[0];
+     var type  = n[1];
+     var id    = n[2];
+     
+     if (notice["id"] == "2.1.0") {
+       blocknum = notice["head_block_number"];
        ws_exec([api_ids["database"], "get_block",[blocknum]]).then(function(res){
        		 onBlock(res,d);
 	      });
-   }
+     };
+     if (notice["id"] == "2.0.0") {
+         objectMap["2.0.0"] = notice;
+     }
+   });
 }
 
 function process_tps(data) {
@@ -70,22 +77,8 @@ function process_tps(data) {
   if ("2.0.0" in objectMap) {
    blockinterval_sec = objectMap["2.0.0"]["parameters"]["block_interval"]
   }
-  var meantps = sum / stats["tps"].length / blockinterval_sec;
-  toUser({
-            "type" : "stats",
-            "data" : {
-               "tps"       : tps,
-               "meantps"   : meantps,
-               "head_block_number" : data["head_block_number"],
-               "history"   : stats[ "tps"        ],
-               "lastnumtxs": stats[ "lastnumtxs" ],
-               "lasttxs"   : stats[ "lasttxs"    ],
-               "lastops"   : stats[ "lastops"    ],
-               "feespayed" : stats[ "feespayed"  ],
-               "transfered": stats[ "transfered" ],
-               "optype"    : stats[ "optype"     ],
-            },
-         });
+  stats["currenttps"] = tps;
+  stats["meantps"]    = sum / stats["tps"].length / blockinterval_sec;
 }
 
 function process_op_stats(op) {
@@ -165,6 +158,30 @@ function process_tx(data) {
   });
 }
 
+function sendStats() {
+  toUser({
+            "type" : "stats",
+            "data" : {
+               "head_block_number" : blocknum,
+               "tps"               : stats[ "currenttps" ],
+               "meantps"           : stats[ "meantps"    ],
+               "history"           : stats[ "tps"        ],
+               "lastnumtxs"        : stats[ "lastnumtxs" ],
+               "lasttxs"           : stats[ "lasttxs"    ],
+               "lastops"           : stats[ "lastops"    ],
+               "feespayed"         : stats[ "feespayed"  ],
+               "transfered"        : stats[ "transfered" ],
+               "optype"            : stats[ "optype"     ],
+            },
+         });
+};
+
+function publish_peers() {
+ if (peerMap.length > 0)
+   toUser({"type":"peers","data":peerMap});
+ setTimeout(publish_peers, 5000);
+}
+
 function onBlock(d,b) {
   process.stdout.write("b");
   var data = b[0][0];
@@ -172,6 +189,7 @@ function onBlock(d,b) {
 
   process_tps(data);
   process_tx(data);
+  sendStats();
 
   delete data["transactions"];
   toUser({
@@ -185,7 +203,110 @@ function onBlock(d,b) {
  *
  *
  */
+function get_account(id) {
+  return ws_exec([api_ids["database"], "get_objects",[[id]]]);
+}
+
+function subscribe_blocks() {
+  ws_exec([api_ids["database"], "set_subscribe_callback",[subscription_id, false]]).then(function(res){;
+      ws_exec([api_ids["database"], "get_objects",[["2.1.0"]]]);
+      subscriptions[subscription_id] = onNotice;
+      subscription_id++;
+  });
+}
+
+function get_blockchain_params() {
+  ws_exec([api_ids["database"], "get_objects",[["2.0.0"]]]).then(function(res) {
+            objectMap["2.0.0"] = res["result"][0];
+          });
+  ws_exec([api_ids["database"], "get_account_count",[]]).then(function(res) {
+            objectMap["account_count"] = res["result"];
+          });
+}
+
+function fetch_connected_peers() {
+  ws_exec([api_ids["network_node"], "get_connected_peers",[]]).then(function(res){
+    var map = [];
+    var peers = res["result"];
+    peers.forEach(function(peer) {
+     var p = {
+         addr : peer["info"]["addr"],
+         platform : peer["info"]["platform"],
+         geo : geoip.lookup(peer["info"]["addr"].split(':')[0])
+
+        };
+        map.push(p);
+        if(map.length == peers.length) {
+            peerMap = map;
+            publish_peers();
+        }
+    });
+  });
+}
+
+
+/*
+ *
+ * API
+ *
+ */
+var rpc_id           = 1;
+var pending_requests = {};
+var api_ids          = {};
+var subscriptions    = {};
+var subscription_id  = 1;
 var pending_promises = [];
+var backend_api;
+
+function setup_ws_connection() {
+   backend_api      = new WebSocket(host);
+
+   backend_api.onerror = function (error) {
+     console.log('WebSocket Error ' + error);
+   };
+
+   backend_api.on('open', function open() {
+      console.log('WebSocket opened');
+      ws_exec([1,"login",["bytemaster", "supersecret"]]).then(function (res) {
+         ws_exec([1,"network_node",[]]).then(function(res){
+                     api_ids["network_node"] = res.result;
+                     fetch_connected_peers();
+                });
+         ws_exec([1,"database",[]]).then(function(res){
+                   api_ids["database"] = res.result;
+                   subscribe_blocks();
+                   get_blockchain_params();
+                });
+      });
+      /*
+      ws_exec([1,"history",[]]).then(function(res){
+                api_ids["history"] = res.result;
+             });
+      ws_exec([1,"network_broadcast",[]]).then(function(res){
+                api_ids["network_broadcast"] = res.result;
+             });
+      */
+   });
+
+   backend_api.on('message', function(e, flags) {
+      var d = JSON.parse(e);
+      //console.log("<"+JSON.stringify(d));
+      if (d[ "method" ] == "notice") {
+        var callback = subscriptions[d["params"][0]];
+        if ( typeof callback === 'function' ) 
+            callback(d["params"][1]);
+      } else {
+       pending_promises[d.id].resolve(d);
+      }
+   });
+
+   backend_api.on('close', function (error) {
+     console.log('WebSocket closed ' + error);
+     setConnectedStatus("disconnected");
+     setTimeout(setup_ws_connection, 10000);
+   });
+}
+
 function ws_exec(request,callback) {
  var req    = {}
  req.method = "call"
@@ -202,61 +323,11 @@ function ws_exec(request,callback) {
  });
 }
 
-function get_account(id) {
-  return ws_exec([api_ids["database"], "get_objects",[[id]]]);
-}
 
-function subscribe_blocks() {
-  ws_exec([api_ids["database"], "set_subscribe_callback",[subscription_id, true]]);
-  ws_exec([api_ids["database"], "get_objects",[["2.1.0"]]]);
-  subscriptions[subscription_id] = onNotice;
-  subscription_id++;
-}
 
-function get_blockchain_params() {
-  ws_exec([api_ids["database"], "get_objects",[["2.0.0"]]]).then(function(res) {
-            objectMap["2.0.0"] = res["result"][0];
-          });
-  ws_exec([api_ids["database"], "get_account_count",[]]).then(function(res) {
-            objectMap["account_count"] = res["result"];
-          });
-}
 
-backend_api.onerror = function (error) {
-  console.log('WebSocket Error ' + error);
-};
 
-backend_api.on('open', function open() {
-   console.log('WebSocket opened');
-   ws_exec([1,"login",["bytemaster","supersecret"]]);
-   ws_exec([1,"network_broadcast",[]]).then(function(res){
-             api_ids["network_broadcast"] = res.result;
-          });
-   ws_exec([1,"history",[]]).then(function(res){
-             api_ids["history"] = res.result;
-          });
-   ws_exec([1,"database",[]]).then(function(res){
-             api_ids["database"] = res.result;
-             get_blockchain_params();
-             subscribe_blocks();
-          });
-});
 
-backend_api.on('message', function(e, flags) {
-   // flags.binary will be set if a binary data is received.
-   // flags.masked will be set if the data was masked.
-   var d = JSON.parse(e);
-   //console.log('Server: ' + JSON.stringify(d,null,"\t"));
-   if (d[ "method" ] == "notice") {
-     var callback = subscriptions[d["params"][0]];
-     if ( typeof callback === 'function' ) 
-         callback(d["params"][1]);
-   } else {
-    pending_promises[d.id].resolve(d);
-    /*
-    callback = pending_requests[d.id];
-    if ( typeof callback === 'function' ) 
-        callback(d);
-    */
-   }
-});
+
+
+setup_ws_connection();
