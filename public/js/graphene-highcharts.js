@@ -1,4 +1,5 @@
 var Higcharts = require("highcharts-release");
+
 var solidgaugesettings = {
     chart: {
         renderTo: 'tps',

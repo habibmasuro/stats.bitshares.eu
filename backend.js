@@ -37,6 +37,7 @@ function objToUser(id) {
      toUser({"type":"obj","id":id,"data":objectMap[id]});
 }
 function toUser(data) {
+ if (data["type"] == "txs") console.log(data);
  frontend_api.clients.forEach(function each(client) {
    client.send(JSON.stringify(data));
  });
@@ -110,10 +111,9 @@ function process_op_stats(op) {
 }
 
 function process_each_op(op, ref_block) {
-  var to   = "-";
-  var from = "-";
-  var opID = op[0];
+  var opID  = op[0];
   var rowId = ref_block + "." + opID;
+
   if (opID == 0) {
      return Promise.all([
              get_account(op[1]["to"]),
@@ -131,8 +131,8 @@ function process_each_op(op, ref_block) {
     return Promise.resolve({
              "id"        : rowId,
              "ref_block" : ref_block,
-             "to"        : to,
-             "from"      : from,
+             "to"        : "n/A",
+             "from"      : "n/A",
              "opID"      : opID,
           })
   }
@@ -147,7 +147,10 @@ function process_tx(data) {
     var numOps = tx["operations"].length;
     var cntOp = 0;
     tx["operations"].forEach(function (op) {
+       // Actual Transaction
        OpPromises.push(process_each_op(op, tx["ref_block_num"]));
+
+       // Stats
        process_op_stats(op);
     });
   });

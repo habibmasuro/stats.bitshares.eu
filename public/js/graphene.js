@@ -30,8 +30,6 @@ function setup_ws_connection() {
 }
 $(window).on('load', setup_ws_connection);
 
-setup_ws_connection();
-
 module.exports = {
                   setup_ws_connection : setup_ws_connection
                  };
