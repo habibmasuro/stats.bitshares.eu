@@ -46,22 +46,26 @@ function toUser(data) {
 function onNotice(d) {
    var notices = d[0];
    notices.forEach(function (notice) {
-     var n = notice["id"].split(".");
-     var space = n[0];
-     var type  = n[1];
-     var id    = n[2];
-     
-     if (notice["id"] == "2.1.0") {
-       objectMap["2.1.0"] = notice;
-       objToUser("2.1.0");
-       blocknum = notice["head_block_number"];
-       ws_exec([api_ids["database"], "get_block",[blocknum]]).then(function(block){
-       		 onBlock(block["result"]);
-	      });
-     };
-     if (notice["id"] == "2.0.0") {
-       objectMap["2.0.0"] = notice;
-       objToUser("2.1.0");
+     if ("id" in notice) {
+         var n = notice["id"].split(".");
+         var space = n[0];
+         var type  = n[1];
+         var id    = n[2];
+         
+         if (notice["id"] == "2.1.0") {
+           objectMap["2.1.0"] = notice;
+           objToUser("2.1.0");
+           blocknum = notice["head_block_number"];
+           ws_exec([api_ids["database"], "get_block",[blocknum]]).then(function(block){
+              onBlock(block["result"]);
+           });
+         };
+         if (notice["id"] == "2.0.0") {
+           objectMap["2.0.0"] = notice;
+           objToUser("2.1.0");
+         }
+     } else {
+      console.log(JSON.stringify(notice));
      }
    });
 }
