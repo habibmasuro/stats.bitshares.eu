@@ -37,7 +37,6 @@ function objToUser(id) {
      toUser({"type":"obj","id":id,"data":objectMap[id]});
 }
 function toUser(data) {
- if (data["type"] == "txs") console.log(data);
  frontend_api.clients.forEach(function each(client) {
    client.send(JSON.stringify(data));
  });
