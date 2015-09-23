@@ -45,7 +45,7 @@ function toUser(data) {
 function onNotice(d) {
    var notices = d[0];
    notices.forEach(function (notice) {
-     if ("id" in notice) {
+     if (notice instanceof Object && "id" in notice) {
          var n = notice["id"].split(".");
          var space = n[0];
          var type  = n[1];
