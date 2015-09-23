@@ -57,12 +57,14 @@ function updateConnectionStatus(type) {
  */
 function process_tx(txs) {
   txs.forEach(function (tx) {
-    $("#txlist tbody").prepend("<tr id='"+tx["id"]+"'>"+
+    var newrow = "<tr id='"+tx["id"]+"'>"+
                                " <td>"+tx["ref_block"]+"</td>"+
                                " <td>"+tx["from"]+"<span class='ui mini text loader'></span></td>"+
                                " <td>"+tx["to"]+"<span class='ui mini text loader'></span></td>"+
                                " <td>"+tx["opID"]+"</td>"+
-                               "</tr>");
+                               "</tr>"
+    $("#txlist tbody").prepend(newrow);
+    $("#txlist tbody tr:gt(6)").remove();
   });
 }
 
